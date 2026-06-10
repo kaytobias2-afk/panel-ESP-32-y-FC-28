@@ -1,1 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel ESP32 FC-28</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: white;
+      text-align: center;
+    }
+    header {
+      background: #020617;
+      padding: 20px;
+      font-size: 25px;
+      font-weight: bold;
+    }
+    .contenedor {
+      width: 90%;
+      max-width: 1000px;
+      margin: 25px auto;
+    }
+    .flujo {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 25px;
+    }
+    .bloque {
+      background: #1e293b;
+      padding: 15px;
+      border-radius: 12px;
+      width: 140px;
+      box-shadow: 0 0 12px rgba(0,0,0,0.4);
+      font-weight: bold;
+    }
+    .flecha {
+      font-size: 30px;
+      color: #38bdf8;
+    }
+    .tarjetas {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 25px;
+    }
+    .card {
+      background: #1e293b;
+      padding: 20px;
+      border-radius: 15px;
+      width: 220px;
+      box-shadow: 0 0 12px rgba(0,0,0,0.4);
+    }
+    .card h2 {
+      color: #93c5fd;
+      font-size: 18px;
+    }
+    .valor {
+      font-size: 34px;
+      font-weight: bold;
+      color: #38bdf8;
+    }
+    .grafica {
+      background: #1e293b;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 0 12px rgba(0,0,0,0.4);
+    }
+    canvas {
+      background: white;
+      border-radius: 10px;
+      padding: 10px;
+    }
+    .normal { color: #22c55e; }
+    .seco { color: #ef4444; }
+    .humedo { color: #38bdf8; }
+    .nota {
+      color: #facc15;
+      font-size: 14px;
+      margin-top: 12px;
+    }
+  </style>
+</head>
 
+<body>
+  <header>Panel de Monitoreo de Humedad con ESP32 y FC-28</header>
+
+  <div class="contenedor">
+    <div class="flujo">
+      <div class="bloque">Sensor<br>FC-28</div>
+      <div class="flecha">→</div>
+      <div class="bloque">ESP32</div>
+      <div class="flecha">→</div>
+      <div class="bloque">WiFi</div>
+      <div class="flecha">→</div>
+      <div class="bloque">n8n<br>Webhook</div>
+      <div class="flecha">→</div>
+      <div class="bloque">GitHub<br>Panel</div>
+    </div>
+
+    <div class="tarjetas">
+      <div class="card">
+        <h2>Dispositivo</h2>
+        <div class="valor" id="nombre">ESP32-FC28-01</div>
+      </div>
+
+      <div class="card">
+        <h2>Humedad</h2>
+        <div class="valor"><span id="humedad">0</span>%</div>
+      </div>
+
+      <div class="card">
+        <h2>Estado</h2>
+        <div class="valor" id="estado">Esperando</div>
+      </div>
+    </div>
+
+    <div class="grafica">
+      <h2>Gráfica de humedad en tiempo real</h2>
+      <canvas id="graficaHumedad"></canvas>
+      <div class="nota" id="nota">Conectando con n8n...</div>
+    </div>
+  </div>
+
+  <script>
+    // CAMBIÁ ESTA URL POR TU WEBHOOK GET DE N8N.
+    // Ejemplo:
+    // const N8N_URL = "https://tobi04.app.n8n.cloud/webhook/datos-humedad";
+    const N8N_URL = "PEGA_AQUI_TU_URL_GET_DE_N8N";
+
+    const ctx = document.getElementById('graficaHumedad').getContext('2d');
+
+    let etiquetas = [];
+    let datosHumedad = [];
+
+    const grafica = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: etiquetas,
+        datasets: [{
+          label: 'Porcentaje de humedad',
+          data: datosHumedad,
+          borderWidth: 2,
+          tension: 0.4,
+          fill: false
+        }]
+      },
+      options: {
+        responsive: true,
+        animation: false,
+        scales: {
+          y: {
+            min: 0,
+            max: 100
+          }
+        }
+      }
+    });
+
+    async function actualizarPanel() {
+      try {
+        if (N8N_URL === "PEGA_AQUI_TU_URL_GET_DE_N8N") {
+          document.getElementById("nota").innerText = "Falta pegar la URL GET de n8n en el archivo index.html";
+          return;
+        }
+
+        const respuesta = await fetch(N8N_URL);
+        const dato = await respuesta.json();
+
+        let nombre = dato.nombre || dato.Nombre || "ESP32-FC28-01";
+        let humedad = Number(dato.humedad || dato.Humedad || dato.porcentaje || dato.Porcentaje);
+        let estado = dato.estado || dato.Estado || "Sin estado";
+
+        if (isNaN(humedad)) {
+          throw new Error("La humedad no llegó como número");
+        }
+
+        document.getElementById("nombre").innerText = nombre;
+        document.getElementById("humedad").innerText = humedad;
+        document.getElementById("estado").innerText = estado;
+        document.getElementById("nota").innerText = "Datos recibidos desde n8n";
+
+        if (humedad < 40) {
+          document.getElementById("estado").className = "valor seco";
+        } else if (humedad <= 70) {
+          document.getElementById("estado").className = "valor normal";
+        } else {
+          document.getElementById("estado").className = "valor humedo";
+        }
+
+        let hora = new Date().toLocaleTimeString();
+
+        etiquetas.push(hora);
+        datosHumedad.push(humedad);
+
+        if (etiquetas.length > 20) {
+          etiquetas.shift();
+          datosHumedad.shift();
+        }
+
+        grafica.update();
+
+      } catch (error) {
+        console.log("Error leyendo n8n:", error);
+        document.getElementById("estado").innerText = "Sin conexión";
+        document.getElementById("estado").className = "valor seco";
+        document.getElementById("nota").innerText = "No se pudo leer n8n. Revisá URL, workflow activo o CORS.";
+      }
+    }
+
+    setInterval(actualizarPanel, 3000);
+    actualizarPanel();
+  </script>
+</body>
+</html>
