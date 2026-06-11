@@ -133,7 +133,7 @@
     // CAMBIÁ ESTA URL POR TU WEBHOOK GET DE N8N.
     // Ejemplo:
     // const N8N_URL = "https://tobi04.app.n8n.cloud/webhook/datos-humedad";
-    const N8N_URL = "PEGA_AQUI_TU_URL_GET_DE_N8N";
+    const N8N_URL = "datos_humedad.json";
 
     const ctx = document.getElementById('graficaHumedad').getContext('2d');
 
@@ -166,10 +166,10 @@
 
     async function actualizarPanel() {
       try {
-        if (N8N_URL === "PEGA_AQUI_TU_URL_GET_DE_N8N") {
-          document.getElementById("nota").innerText = "Falta pegar la URL GET de n8n en el archivo index.html";
-          return;
-        }
+        if (!N8N_URL) {
+  document.getElementById("nota").innerText = "No se encontró el archivo de datos";
+  return;
+}
 
         const respuesta = await fetch(N8N_URL);
         const dato = await respuesta.json();
