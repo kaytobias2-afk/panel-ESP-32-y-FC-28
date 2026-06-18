@@ -1,3 +1,11 @@
 {
-  "ultimaLectura": {}
+  "ultimaLectura": {
+    "sensor": "FC-28",
+    "adc": 4095,
+    "humedad": 0,
+    "porcentaje": 0,
+    "estado": "SECO",
+    "mensaje": "El suelo esta seco. Necesita riego.",
+    "fecha": "18/06/2026, 09:27:10 a. m."
+  }
 }
