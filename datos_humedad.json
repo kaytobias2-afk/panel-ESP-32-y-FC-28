@@ -1,8 +1,11 @@
 {
-  "dispositivo": "ESP32_SIMULACION",
-  "humedad": 5,
-  "porcentaje": "5%",
-  "estado": "MUY SECO",
-  "origen": "simulacion",
-  "fecha": "16/6/2026, 10:55:00"
+  "ultimaLectura": {
+    "sensor": "FC-28",
+    "adc": 4095,
+    "humedad": 0,
+    "porcentaje": 0,
+    "estado": "SECO",
+    "mensaje": "El suelo esta seco. Necesita riego.",
+    "fecha": "18/06/2026, 09:08:15 a. m."
+  }
 }
